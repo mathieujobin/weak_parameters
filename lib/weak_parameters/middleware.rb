@@ -6,7 +6,7 @@ module WeakParameters
     def call(env)
       @app.call env
     rescue WeakParameters::ValidationError => exception
-      @app.validation_error exception, env
+      [400, { "Content-Type" => "application/json; charset=utf-8" }, { result: false, error: exception}.to_json ]
     end
   end
 end
