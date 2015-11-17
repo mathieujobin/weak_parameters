@@ -1,5 +1,5 @@
 require "weak_parameters"
-require "weak_parameters/middleware"
+require "weak_parameters/callback"
 
 # Provides `validates` DSL to controllers to validate params.
 #
