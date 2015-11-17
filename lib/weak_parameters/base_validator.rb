@@ -1,15 +1,17 @@
 module WeakParameters
   class BaseValidator
-    attr_reader :controller, :key, :options, :block
+    attr_reader :controller, :options, :block
 
     def initialize(controller, key, options = {}, &block)
       @controller = controller
       @key = key
       @options = options
       @block = block
+      @path = []
     end
 
-    def validate
+    def validate(*path)
+      @path = path
       handle_failure unless valid?
     end
 
@@ -17,8 +19,21 @@ module WeakParameters
       !!options[:required]
     end
 
+    def strong?
+      !!options[:strong]
+    end
+
     def type
       self.class.name.split("::").last.sub(/Validator$/, "").underscore.to_sym
+    end
+
+    def key
+      path[-1]
+    end
+
+    def strong_params(*path)
+      @path = path
+      exist? && strong? ? {key => value} : {}
     end
 
     private
@@ -39,7 +54,7 @@ module WeakParameters
     end
 
     def nil?
-      value.nil?
+      params.nil? || params[key].nil?
     end
 
     def exist?
@@ -57,8 +72,16 @@ module WeakParameters
       end
     end
 
+    # key array to validation target
+    def path
+      # Because @key becomes nil at ListValidator, I remove it from path.
+      (@path + [ @key ]).compact
+    end
+
     def params
-      controller.params
+      path[0...-1].inject(controller.params) { |params, key|
+        params[key]
+      }
     end
 
     def value

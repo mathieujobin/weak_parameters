@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe "Recipes" do
+describe "Recipes", type: :request do
   let(:params) do
     {
       object: [],
@@ -10,8 +10,19 @@ describe "Recipes" do
       flag: true,
       config: {},
       tags: [],
+      attachment: Rack::Test::UploadedFile.new(__FILE__),
       zip_code: "123-4567",
       custom: 0,
+      nested: {
+        number: 0
+      },
+      numbers: [1, 2, 3],
+      body: {
+        items: [
+          { name: "foo", price: 100 },
+          { name: "bar", price: 100 }
+        ]
+      }
     }
   end
 
@@ -53,7 +64,7 @@ describe "Recipes" do
 
     context "with exceptional interger param" do
       before do
-        params[:number] = true
+        params[:number] = [1]
       end
       include_examples "400"
     end
@@ -82,6 +93,13 @@ describe "Recipes" do
     context "with wrong float param" do
       before do
         params[:rate] = "-x"
+      end
+      include_examples "400"
+    end
+
+    context "with wrong file param" do
+      before do
+        params[:attachment] = "x"
       end
       include_examples "400"
     end
@@ -125,6 +143,45 @@ describe "Recipes" do
       it "delegates to specified method" do
         post "/recipes", params
         response.status.should == 403
+      end
+    end
+
+    context "with wrong nested params" do
+      before do
+        params[:nested][:number] = true
+      end
+      include_examples "400"
+    end
+
+    context "with wrong repeated params" do
+      describe 'scalar' do
+        before do
+          params[:numbers] = 1
+        end
+        include_examples "400"
+      end
+
+      describe 'wrong type' do
+        before do
+          params[:numbers] = ["foo"]
+        end
+        include_examples "400"
+      end
+    end
+
+    context "with complex params" do
+      describe 'invalid parameter' do
+        before do
+          params[:body][:items] << { price: "xxx" }
+        end
+        include_examples "400"
+      end
+
+      describe 'missing parameter' do
+        before do
+          params.delete :body
+        end
+        include_examples "201"
       end
     end
   end

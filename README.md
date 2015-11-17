@@ -8,7 +8,18 @@ gem "weak_parameters"
 
 ## Usage
 ```ruby
+
 # Rails Case
+class ApplicationController < ActionController::Base
+  protect_from_forgery
+
+  respond_to :json
+
+  rescue_from WeakParameters::ValidationError do
+    head 400
+  end
+end
+
 # WeakParameters provides `validates` class method to define validations.
 class RecipesController < ApplicationController
   validates :create do
@@ -67,8 +78,11 @@ end
 * integer
 * string
 * boolean (= 0, 1, false, true)
+* file
+* object
+* list
 
-### Avilable options
+### Available options
 * required
 * only
 * except

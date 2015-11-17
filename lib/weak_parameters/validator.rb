@@ -15,7 +15,27 @@ module WeakParameters
       @validators ||= []
     end
 
+    def strong_params
+      validators.map(&:strong_params).inject(ActionController::Parameters.new, &:merge)
+    end
+
     private
+
+    def with_validators(&block)
+      old_validators = @validators
+
+      begin
+        @validators = []
+        block.call
+        @validators
+      ensure
+        @validators = old_validators
+      end
+    end
+
+    def params
+      controller.params
+    end
 
     def any(key, options = {}, &block)
       validators << WeakParameters::AnyValidator.new(controller, key, options, &block)
@@ -43,6 +63,20 @@ module WeakParameters
 
     def float(key, options = {}, &block)
       validators << WeakParameters::FloatValidator.new(controller, key, options, &block)
+    end
+
+    def file(key, options = {}, &block)
+      validators << WeakParameters::FileValidator.new(controller, key, options, &block)
+    end
+
+    def object(key, options = {}, &block)
+      children = with_validators { instance_eval(&block) }
+      validators << WeakParameters::ObjectValidator.new(controller, key, children, options)
+    end
+
+    def list(key, type, options = {}, &block)
+      children = with_validators { send type, nil, options, &block }
+      validators << WeakParameters::ListValidator.new(controller, key, children.first)
     end
   end
 end
