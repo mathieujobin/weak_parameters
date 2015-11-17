@@ -37,7 +37,7 @@ module WeakParameters
   module Sinatra
     def validates(&block)
       validator = WeakParameters::Validator.new(self, &block)
-      req = Rack::Request.new(request.env)
+      req = ::Rack::Request.new(request.env)
       WeakParameters.stats[req.request_method][req.env["PATH_INFO"]] = validator
       WeakParameters.stats[req.request_method][req.env["PATH_INFO"]].validate
     end

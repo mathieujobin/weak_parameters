@@ -1,5 +1,5 @@
 # WeakParameters
-Validates `params` in your controller.
+Validates `params` in your sinatra app.
 
 ## Installation
 ```ruby
@@ -7,53 +7,19 @@ gem "weak_parameters"
 ```
 
 ## Usage
-```ruby
-
-# Rails Case
-class ApplicationController < ActionController::Base
-  protect_from_forgery
-
-  respond_to :json
-
-  rescue_from WeakParameters::ValidationError do
-    head 400
-  end
-end
-
-# WeakParameters provides `validates` class method to define validations.
-class RecipesController < ApplicationController
-  validates :create do
-    string :name, required: true, except: ["charlie", "dave"]
-    integer :type, only: 1..3
-    string :quantity do |value|
-      value =~ /\A\d+(?:\.\d+)g\z/
-    end
-  end
-
-  def create
-    respond_with Recipe.create(params.slice(:name, :type))
-  end
-end
-```
 
 ```ruby
-irb(main):001:0> app.accept = "application/json"
-=> "application/json"
-irb(main):002:0> app.post "/recipes", name: "alice", type: 1
-=> 201
-irb(main):003:0> app.post "/recipes", name: "alice"
-=> 201
-irb(main):004:0> app.post "/recipes", type: 1
-=> 400
-irb(main):005:0> app.post "/recipes", name: "alice", type: "bob"
-=> 400
-```
+# Sinatra
+require "weak_parameters"                                                                            |
+require "weak_parameters/sinatra"                                                                    |
 
-```ruby
-# Sinatra Case
 class App < Sinatra::Base
+  WeakParameters::Rack.error_handler_register do |raised, env|
+    [400, { "Content-Type" => "application/json; charset=utf-8" }, {result: false, error: raised}.to_json]
+  end
+
   include WeakParameters::Sinatra
-  use WeakParameters::Middleware
+  use WeakParameters::Rack
 
   post 'recipes' do
     validates do
@@ -62,10 +28,6 @@ class App < Sinatra::Base
     end
 
     Recipe.create(params).to_xml
-  end
-
-  def validation_error exception, env
-    [400, { "Content-Type" => "text/html; charset=utf-8" }, [ "exception.message"]]
   end
 end
 ```
