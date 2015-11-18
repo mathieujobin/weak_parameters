@@ -1,13 +1,13 @@
 require "active_support/hash_with_indifferent_access"
 require "active_support"
-require "action_dispatch"
+#require "action_dispatch"
 
 
 require "weak_parameters/base_validator"
 require "weak_parameters/any_validator"
 require "weak_parameters/array_validator"
 require "weak_parameters/boolean_validator"
-require "weak_parameters/file_validator"
+#require "weak_parameters/file_validator"
 require "weak_parameters/float_validator"
 require "weak_parameters/hash_validator"
 require "weak_parameters/integer_validator"
