@@ -5,7 +5,6 @@ module WeakParameters
     VALID_TYPES = [
       StringIO,
       IO,
-      ActionDispatch::Http::UploadedFile,
       Rack::Test::UploadedFile,
     ]
 

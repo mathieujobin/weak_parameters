@@ -1,24 +1,15 @@
 # WeakParameters [![Build Status](https://travis-ci.org/r7kamura/weak_parameters.svg?branch=master)](https://travis-ci.org/r7kamura/weak_parameters)
-Validates `params` in your controller.
+Validates `params` in your controllers.
 
 ## Installation
 ```ruby
 gem "weak_parameters"
 ```
 
-## Usage
+## WeakParameters provides `validates` class method to define validations.
+
+### Rails
 ```ruby
-class ApplicationController < ActionController::Base
-  protect_from_forgery
-
-  respond_to :json
-
-  rescue_from WeakParameters::ValidationError do
-    head 400
-  end
-end
-
-# WeakParameters provides `validates` class method to define validations.
 class RecipesController < ApplicationController
   validates :create do
     string :name, required: true, except: ["charlie", "dave"], strong: true
@@ -37,17 +28,28 @@ class RecipesController < ApplicationController
 end
 ```
 
+### Sinatra
 ```ruby
-irb(main):001:0> app.accept = "application/json"
-=> "application/json"
-irb(main):002:0> app.post "/recipes", name: "alice", type: 1
-=> 201
-irb(main):003:0> app.post "/recipes", name: "alice"
-=> 201
-irb(main):004:0> app.post "/recipes", type: 1
-=> 400
-irb(main):005:0> app.post "/recipes", name: "alice", type: "bob"
-=> 400
+require "weak_parameters"                                                                            |
+require "weak_parameters/sinatra"                                                                    |
+
+class App < Sinatra::Base
+  WeakParameters::Rack.error_handler_register do |raised, env|
+    [400, { "Content-Type" => "application/json; charset=utf-8" }, {result: false, error: raised}.to_json]
+  end
+
+  include WeakParameters::Sinatra
+  use WeakParameters::Rack
+
+  post 'recipes' do
+    validates do
+      string :name, required: true
+      integer :type
+    end
+
+    Recipe.create(params).to_xml
+  end
+end
 ```
 
 ### Available validators
